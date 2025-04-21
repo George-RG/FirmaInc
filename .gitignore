@@ -5,3 +5,7 @@
 binaries/
 images/
 scratch/
+
+env/
+binwalk*/
+/analyses/chromedriver

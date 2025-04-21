@@ -1,9 +1,9 @@
 #!/bin/bash
 
 sudo apt update
-sudo apt install -y curl wget tar git ruby python-is-python3 python3 bc
-python3 -m pip install --upgrade pip
-python3 -m pip install coloredlogs
+sudo apt install -y curl wget tar git ruby python python3 python3-pip bc
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install coloredlogs
 
 # for docker
 sudo apt install -y docker.io
@@ -30,7 +30,7 @@ wget https://github.com/ReFirmLabs/binwalk/archive/refs/tags/v2.3.4.tar.gz && \
   cd binwalk-2.3.4 && \
   sed -i 's/^install_ubireader//g' deps.sh && \
   echo y | ./deps.sh && \
-  python3 setup.py install
+  sudo python3 setup.py install
 sudo apt install -y mtd-utils gzip bzip2 tar arj lhasa p7zip p7zip-full cabextract fusecram cramfsswap squashfs-tools sleuthkit default-jdk cpio lzop lzma srecord zlib1g-dev liblzma-dev liblzo2-dev unzip
 
 cd - # back to root of project
