@@ -6,6 +6,6 @@ binaries/
 images/
 scratch/
 
-env/
+.env/
 binwalk*/
 /analyses/chromedriver

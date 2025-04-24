@@ -53,22 +53,29 @@ if ! docker info &> /dev/null; then
 fi
 print_msg success "Docker is accessible."
 
-# TODO maybe a good idea is to use --restartand not --rm but needs check if container exists
-
-# Setup postgrss database
-docker run -d --rm\
-    --name firmainc-postgres \
-    -e POSTGRES_PASSWORD=firmadyne \
-    -e POSTGRES_USER=firmadyne \
-    -e POSTGRES_DB=firmware \
-    -e PGDATA=/var/lib/postgresql/data/pgdata \
-    -v $REPO_ROOT/database:/var/lib/postgresql/data \
-    -p 4321:5432 \
-    postgres &> /dev/null
-
-if [ $? -ne 0 ]; then
-    print_msg fail "Failed to start the PostgreSQL container."
-    exit 1
+# Check if the container already exists
+if docker ps -a --format '{{.Names}}' | grep -Eq "^firmainc-postgres\$"; then
+    print_msg info "Container 'firmainc-postgres' already exists. Restarting it..."
+    docker start firmainc-postgres &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to restart the existing container."
+        exit 1
+    fi
+else
+    print_msg info "Creating a new PostgreSQL container..."
+    docker run -d \
+        --name firmainc-postgres \
+        -e POSTGRES_PASSWORD=firmadyne \
+        -e POSTGRES_USER=firmadyne \
+        -e POSTGRES_DB=firmware \
+        -e PGDATA=/var/lib/postgresql/data/pgdata \
+        -v $REPO_ROOT/database:/var/lib/postgresql/data \
+        -p 4321:5432 \
+        postgres &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to start the PostgreSQL container."
+        exit 1
+    fi
 fi
 
 # Wait for the container to start
@@ -78,12 +85,69 @@ done
 
 print_msg success "PostgreSQL started successfully."
 
-# Run the schema inside the postgress container using psql
-docker exec -i firmainc-postgres psql -U firmadyne -d firmware < "$REPO_ROOT/database/schema" &> /dev/null
-
-if [ $? -ne 0 ]; then
-    print_msg fail "Could not populate database"
-    exit 1
+if docker exec -i firmainc-postgres psql -U firmadyne -d firmware -c "\dt" | grep -q "image"; then
+    print_msg info "Database schema already applied. Skipping schema application."
+else
+    print_msg info "Applying database schema..."
+    docker exec -i firmainc-postgres psql -U firmadyne -d firmware < "$REPO_ROOT/database/schema" &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Could not populate database"
+        exit 1
+    fi
+    print_msg success "Database schema applied successfully."
 fi
 
 print_msg success "firmware database populated"
+
+print_msg info "Creating Python enviroment"
+
+# Check if the Python virtual environment already exists
+if [ -d "$REPO_ROOT/.env" ]; then
+    print_msg info "Python virtual environment already exists. Skipping creation."
+else
+    print_msg info "Creating Python virtual environment..."
+    python3 -m venv "$REPO_ROOT/.env"
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to create Python virtual environment."
+        exit 1
+    fi
+    print_msg success "Python virtual environment created successfully."
+fi
+
+# Install binwalk
+print_msg info "Installing Binwalk..."
+source "$REPO_ROOT/.env/bin/activate"
+wget -q https://github.com/George-RG/binwalk/archive/refs/tags/v2.3.5.tar.gz -O binwalk.tar.gz
+if [ $? -ne 0 ]; then
+    print_msg fail "Failed to download Binwalk."
+    exit 1
+fi
+tar -xzf binwalk.tar.gz
+rm binwalk.tar.gz
+cd "$REPO_ROOT/binwalk-2.3.5" || exit
+echo y | ./deps.sh
+python3 setup.py install &> /dev/null
+
+if [ $? -ne 0 ]; then
+    print_msg fail "Failed to install Binwalk."
+    exit 1
+fi
+
+print_msg success "Binwalk installed successfully"
+
+# Activate the virtual environment and install requirements
+if [ -f "$REPO_ROOT/requirements.txt" ]; then
+    print_msg info "Installing Python dependencies from requirements.txt..."
+    source "$REPO_ROOT/.env/bin/activate"
+    pip install -r "$REPO_ROOT/requirements.txt"
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to install Python dependencies."
+        deactivate
+        exit 1
+    fi
+    deactivate
+    print_msg success "Python dependencies installed successfully."
+else
+    print_msg info "No requirements.txt found. Skipping dependency installation."
+fi
+
