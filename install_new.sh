@@ -88,7 +88,7 @@ done
 
 print_msg success "PostgreSQL started successfully."
 
-if docker exec -i firmainc-possourcetgres psql -U firmadyne -d firmware -c "\dt" | grep -q "image"; then
+if docker exec -i firmainc-postgres psql -U firmadyne -d firmware -c "\dt" | grep -q "image"; then
     print_msg info "Database schema already applied. Skipping schema application."
 else
     print_msg info "Applying database schema..."
@@ -129,7 +129,9 @@ tar -xzf binwalk.tar.gz
 rm binwalk.tar.gz
 cd "$REPO_ROOT/binwalk-2.3.5" || exit
 ./deps.sh --yes &> /dev/null
-python3 setup.py install &> /dev/null
+pip install . &> /dev/null
+cd - &> /dev/null
+rm -rf "$REPO_ROOT/binwalk-2.3.5"
 deactivate
 
 if [ $? -ne 0 ]; then
