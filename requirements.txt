@@ -1,0 +1,4 @@
+coloredlogs==15.0.1
+humanfriendly==10.0
+psycopg2-binary==2.9.10
+python-magic==0.4.27
