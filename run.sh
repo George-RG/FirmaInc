@@ -105,7 +105,7 @@ function run_emulation()
     # If the brand is not specified in the argument, it will be inferred 
     # automatically from the path of the image file.
     timeout --preserve-status --signal SIGINT 300 \
-        ./sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
+        /home/georgerg/FirmaInc/sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
         -nk $INFILE images 2>&1 >/dev/null
 
     IID=`./scripts/util.py get_iid $INFILE $PSQL_IP`
