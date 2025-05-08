@@ -4,7 +4,7 @@ set -eu
 
 function print_usage()
 {
-    echo "Usage: ${0} [mode]... [brand] [firmware|firmware_directory]"
+    echo "Usage: ${0} [mode] [brand] [firmware|firmware_directory]"
     echo "mode: use one option at once"
     echo "      -r, --run     : run mode         - run emulation (no quit)"
     echo "      -c, --check   : check mode       - check network reachable and web access (quit)"
@@ -42,8 +42,30 @@ if [ ${OPTION} == "none" ]; then
   exit 1
 fi
 
-# TODO: make this more robust
-source ./utility.sh
+# Import the config and utility functions
+if [ -e ./firmport.config ]; then
+    source ./firmport.config
+else
+    echo "Error: Could not find config file"
+    echo "Please run the script from the root directory of the project"
+    exit 1
+fi
+
+if [ -e ./utility.sh ]; then
+    source ./core/utility.sh
+else
+    echo "Error: Could not find utility file"
+    echo "Please run the script from the root directory of the project"
+    exit 1
+fi
+
+ROOT_DIR=$(pwd)
+
+# Check connectivity with the database
+if ! check_db_connection; then
+    print_msg fail "Could not connect to the database"
+    exit 1
+fi
 
 function emulate()
 {

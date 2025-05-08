@@ -73,7 +73,7 @@ else
         -e POSTGRES_DB=firmware \
         -e PGDATA=/var/lib/postgresql/data/pgdata \
         -v $REPO_ROOT/database:/var/lib/postgresql/data \
-        -p 4321:5432 \
+        -p 4321:4321 \
         postgres &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to start the PostgreSQL container."
@@ -160,9 +160,9 @@ fi
 if [ -d "$REPO_ROOT/analyses/routersploit" ]; then
     if [ "$(ls -A "$REPO_ROOT/analyses/routersploit")" ]; then
         source "$REPO_ROOT/.env/bin/activate"
-        pip install -r "$REPO_ROOT/analyses/routersploit/requirements.txt"
+        pip install -r "$REPO_ROOT/analyses/routersploit/requirements.txt" &> /dev/null
         deactivate
-        cd "$REPO_ROOT/analyses/routersploit" && patch -p1 < ../routersploit_patch && cd "$REPO_ROOT"
+        cd "$REPO_ROOT/analyses/routersploit" && patch -p1 < ../routersploit_patch && cd "$REPO_ROOT" &> /dev/null
         print_msg info "Routersploit configured successfully."
     else
         print_msg warning "Routersploit was not found. Skipping (this may affect analyses)."
