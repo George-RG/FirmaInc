@@ -17,6 +17,9 @@ print_msg() {
         warning)
             echo -e "[\033[1;33m!\033[0m] $msg"  # Yellow !
             ;;
+        warn)
+            echo -e "[\033[1;33m!\033[0m] $msg"  # Yellow !
+            ;;
         *)
             echo "[?] $msg"
             ;;
@@ -37,4 +40,10 @@ function check_db_connection()
     fi
 
     return 0
+}
+
+function get_brand()
+{
+  INFILE=${1}
+  echo `$PYTHON_EXEC $ROOT_DIR/python/util.py get_brand ${PSQL_IP} ${INFILE} `
 }

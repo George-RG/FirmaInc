@@ -1,10 +1,10 @@
 #!/bin/bash
 
-set -eu
+set -eux
 
 function print_usage()
 {
-    echo "Usage: ${0} [mode] [brand] [firmware|firmware_directory]"
+    echo "Usage: ${0} [mode] [firmware|firmware_directory] [brand]"
     echo "mode: use one option at once"
     echo "      -r, --run     : run mode         - run emulation (no quit)"
     echo "      -c, --check   : check mode       - check network reachable and web access (quit)"
@@ -59,6 +59,7 @@ else
     exit 1
 fi
 
+BRAND=${2}
 ROOT_DIR=$(pwd)
 
 # Check connectivity with the database
@@ -71,5 +72,80 @@ function emulate()
 {
     print_msg info "${1} emulation started"
     FRIMWARE_FILE=${1}
+    FILENAME=`basename ${FRIMWARE_FILE%.*}`
+    IMAGES_DIR=${ROOT_DIR}/images/
+
+    if [ ${BRAND} = "auto" ]; then
+        BRAND=`get_brand ${FRIMWARE_FILE}`
+        if [ ! "${BRAND}" = "unknown" ]; then
+            print_msg info "Identified brand: ${BRAND}"
+        fi
+    fi
     
+    if [ "${BRAND}" = "unknown" ]; then
+        print_msg warn "Unknown brand for ${FILENAME}. Cannot apply brand-specific arbitrations"
+        BRAND_ARG=""
+    else
+        BRAND_ARG="-b ${BRAND}"
+    fi
+
+    # ================================
+    # extract filesystem from firmware
+    # ================================
+    t_start="$(date -u +%s.%N)"
+
+    timeout --preserve-status --signal SIGINT 300 \
+        ${PYTHON_EXEC} ${ROOT_DIR}/sources/extractor/extractor.py \
+        ${BRAND_ARG} \
+        -sql ${PSQL_IP} \
+        -nk \
+        ${FRIMWARE_FILE} \
+        ${IMAGES_DIR} 2>&1 >/dev/null
+
+    if [ $? -ne 0 ]; then
+        print_msg fail "Extractor failed for ${FRIMWARE_FILE}"
+        return
+    fi
+
+    IID=`${PYTHON_EXEC} ${ROOT_DIR}/python/util.py get_iid ${PSQL_IP} ${FRIMWARE_FILE} `
+
+    if [ ! "${IID}" ]; then
+        print_msg fail "Extractor failed to get IID for ${FRIMWARE_FILE}"
+        return
+    fi
+
+    # ================================
+    # extract kernel from firmware
+    # ================================
+    # If the brand is not specified in the argument, it will be inferred 
+    # automatically from the path of the image file.
+
+    timeout --preserve-status --signal SIGINT 300 \
+        ${PYTHON_EXEC} ${ROOT_DIR}/sources/extractor/extractor.py \
+        ${BRAND_ARG} \
+        -sql ${PSQL_IP} \
+        -np \
+        ${FRIMWARE_FILE} \
+        ${IMAGES_DIR} 2>&1 >/dev/null
+
+    if [ $? -ne 0 ]; then
+        print_msg fail "Extractor failed for ${FRIMWARE_FILE}"
+        return
+    fi
+
+    print_msg success "Extractor completed for ${FRIMWARE_FILE} in $(echo "$(date -u +%s.%N) - ${t_start}" | bc) seconds"
 }
+
+FIRMWARE=${3}
+
+if [ ! -d ${FIRMWARE} ]; then
+    emulate ${FIRMWARE}
+else
+    FIRMWARES=`find ${3} -type f`
+
+    for FIRMWARE in ${FIRMWARES}; do
+        if [ ! -d "${FIRMWARE}" ]; then
+            emulate${FIRMWARE}
+        fi
+    done
+fi
