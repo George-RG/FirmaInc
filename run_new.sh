@@ -60,7 +60,6 @@ else
 fi
 
 BRAND=${2}
-ROOT_DIR=$(pwd)
 
 # Check connectivity with the database
 if ! check_db_connection; then
@@ -73,7 +72,6 @@ function emulate()
     print_msg info "${1} emulation started"
     FRIMWARE_FILE=${1}
     FILENAME=`basename ${FRIMWARE_FILE%.*}`
-    IMAGES_DIR=${ROOT_DIR}/images/
 
     if [ ${BRAND} = "auto" ]; then
         BRAND=`get_brand ${FRIMWARE_FILE}`
@@ -102,7 +100,7 @@ function emulate()
         ${FRIMWARE_FILE} \
         ${IMAGES_DIR} 2>&1 >/dev/null
 
-    if [ $? -ne 0 ]; then
+    if [ $? -ne 0 ] || [! -e ${}];  then
         print_msg fail "Extractor failed for ${FRIMWARE_FILE}"
         return
     fi
@@ -133,7 +131,20 @@ function emulate()
         return
     fi
 
+    WORK_DIR=`get_scratch ${IID}`
+    mkdir -p ${WORK_DIR}
+    chown -R ${USER}:${USER} ${WORK_DIR}
+    echo ${FILENAME} > ${WORK_DIR}/name
+    echo ${BRAND} > ${WORK_DIR}/brand
+    sync
+
     print_msg success "Extractor completed for ${FRIMWARE_FILE} in $(echo "$(date -u +%s.%N) - ${t_start}" | bc) seconds"
+    echo "$(date -u +%s.%N) - ${t_start}" | bc > ${WORK_DIR}/time_extract 
+
+    # ================================
+    # check architecture
+    # ================================
+
 }
 
 FIRMWARE=${3}

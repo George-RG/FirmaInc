@@ -47,3 +47,28 @@ function get_brand()
   INFILE=${1}
   echo `$PYTHON_EXEC $ROOT_DIR/python/util.py get_brand ${PSQL_IP} ${INFILE} `
 }
+
+function check_is_number()
+{
+  if [ $# -ne 1 ]; then
+    echo "Error: check_is_number() requires exactly one argument"
+    return 1
+  fi
+
+  if ! [[ $1 =~ ^[0-9]+$ ]]; then
+    echo "Error: $1 is not a number"
+    return 1
+  fi
+
+  return 0
+}
+
+function get_scratch()
+{
+    if check_is_number "${1}"; then
+        echo "Error: Invalid image number!"
+        exit 1
+    fi
+
+    echo "${SCRATCH_DIR}/image-${1}"
+}
