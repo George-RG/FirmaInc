@@ -133,18 +133,33 @@ function emulate()
 
     WORK_DIR=`get_scratch ${IID}`
     mkdir -p ${WORK_DIR}
-    chown -R ${USER}:${USER} ${WORK_DIR}
-    echo ${FILENAME} > ${WORK_DIR}/name
-    echo ${BRAND} > ${WORK_DIR}/brand
+    chown -R ${UID}:${GID} ${WORK_DIR}
+    set_image_info ${IID} ${WORK_DIR} name ${FILENAME}
+    set_image_info ${IID} ${WORK_DIR} brand ${BRAND}
     sync
 
     print_msg success "Extractor completed for ${FRIMWARE_FILE} in $(echo "$(date -u +%s.%N) - ${t_start}" | bc) seconds"
     echo "$(date -u +%s.%N) - ${t_start}" | bc > ${WORK_DIR}/time_extract 
 
     # ================================
-    # check architecture
+    # check if the image has already been emulated
     # ================================
 
+    if [ ${OPTION} = "check" ] ; then
+        if (egrep -sqi "true" ${WORK_DIR}/result); then
+            RESULT=`cat ${WORK_DIR}/result`&& [ -e ${WORK_DIR}/result ]
+            return
+        fi
+        rm ${WORK_DIR}/result
+    fi
+
+
+
+    # ================================
+    # check architecture
+    # ================================
+    t_start="$(date -u +%s.%N)"
+    ARCH=`${PYTHON_EXEC} ${ROOT_DIR}/python/getArch.py ${IMAGES_DIR}/${IID}.tar.gz ${PSQL_IP}`
 }
 
 FIRMWARE=${3}

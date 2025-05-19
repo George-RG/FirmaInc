@@ -72,3 +72,52 @@ function get_scratch()
 
     echo "${SCRATCH_DIR}/image-${1}"
 }
+
+function get_image_info()
+{
+    IID=${1}
+    KEY=${2}
+
+    if [ -z "${IID}" ] || [ -z "${KEY}" ]; then
+        echo "Error: get_image_info() requires two arguments"
+        return 1
+    fi
+    if ! check_is_number "${IID}"; then
+        echo "Error: Invalid image number!"
+        return 1
+    fi
+
+    SCRATCH_DIR=$(get_scratch ${IID})
+
+    echo `$PYTHON_EXEC $ROOT_DIR/python/imageInfo.py $SCRATCH_DIR -g -k ${KEY} `
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to get image info for ${IID}"
+        return 1
+    fi
+}
+
+function set_image_info()
+{
+    IID=${1}
+    KEY=${2}
+    VALUE=${3}
+
+    if [ -z "${IID}" ] || [ -z "${KEY}" ] || [ -z "${VALUE}" ]; then
+        echo "Error: set_image_info() requires three arguments"
+        return 1
+    fi
+    if ! check_is_number "${IID}"; then
+        echo "Error: Invalid image number!"
+        return 1
+    fi
+
+    SCRATCH_DIR=$(get_scratch ${IID})
+
+    echo `$PYTHON_EXEC $ROOT_DIR/python/imageInfo.py $SCRATCH_DIR -s -k ${KEY} -v ${VALUE}`
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to set image info for ${IID}"
+        return 1
+    fi
+}
