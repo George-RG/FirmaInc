@@ -105,8 +105,11 @@ print_msg success "firmware database populated"
 print_msg info "Creating Python enviroment"
 
 # Check if the Python virtual environment already exists
-if [ -d "$REPO_ROOT/.env" ]; then
+if [ "$VIRTUAL_ENV" != "" ]; then
     print_msg info "Python virtual environment already exists. Skipping creation."
+elif [ -d "$REPO_ROOT/.env" ]; then
+    print_msg info "Python virtual environment already exists. Skipping creation."
+    source "$REPO_ROOT/.env/bin/activate"
 else
     print_msg info "Creating Python virtual environment..."
     python3 -m venv "$REPO_ROOT/.env"
@@ -114,12 +117,12 @@ else
         print_msg fail "Failed to create Python virtual environment."
         exit 1
     fi
+    source "$REPO_ROOT/.env/bin/activate"
     print_msg success "Python virtual environment created successfully."
 fi
 
 # Install binwalk
 print_msg info "Installing Binwalk..."
-source "$REPO_ROOT/.env/bin/activate"
 wget -q https://github.com/George-RG/binwalk/archive/refs/tags/v2.3.5.tar.gz -O binwalk.tar.gz
 if [ $? -ne 0 ]; then
     print_msg fail "Failed to download Binwalk."
@@ -132,7 +135,6 @@ cd "$REPO_ROOT/binwalk-2.3.5" || exit
 pip install . &> /dev/null
 cd - &> /dev/null
 rm -rf "$REPO_ROOT/binwalk-2.3.5"
-deactivate
 
 if [ $? -ne 0 ]; then
     print_msg fail "Failed to install Binwalk."
@@ -144,14 +146,11 @@ print_msg success "Binwalk installed successfully"
 # Activate the virtual environment and install requirements
 if [ -f "$REPO_ROOT/requirements.txt" ]; then
     print_msg info "Installing Python dependencies from requirements.txt..."
-    source "$REPO_ROOT/.env/bin/activate"
     pip install -r "$REPO_ROOT/requirements.txt" &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Python dependencies."
-        deactivate
         exit 1
     fi
-    deactivate
     print_msg success "Python dependencies installed successfully."
 else
     print_msg warning "No requirements.txt found. Skipping dependency installation."
@@ -159,9 +158,7 @@ fi
 
 if [ -d "$REPO_ROOT/analyses/routersploit" ]; then
     if [ "$(ls -A "$REPO_ROOT/analyses/routersploit")" ]; then
-        source "$REPO_ROOT/.env/bin/activate"
         pip install -r "$REPO_ROOT/analyses/routersploit/requirements.txt" &> /dev/null
-        deactivate
         cd "$REPO_ROOT/analyses/routersploit" && patch -p1 < ../routersploit_patch && cd "$REPO_ROOT" &> /dev/null
         print_msg info "Routersploit configured successfully."
     else
