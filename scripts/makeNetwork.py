@@ -45,7 +45,7 @@ fi
 if (echo ${RUN_MODE} | grep -q "analyze"); then
     QEMU_DEBUG="user_debug=31 firmadyne.syscall=32"
 else
-    QEMU_DEBUG="user_debug=0 firmadyne.syscall=1"
+    QEMU_DEBUG="user_debug=0 firmadyne.syscall=27"
 fi
 
 if (echo ${RUN_MODE} | grep -q "boot"); then
