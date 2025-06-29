@@ -207,32 +207,34 @@ else
 fi
 
 # Install Jeferson
-if ! command -v jeferson &> /dev/null; then
-    print_msg info "Jeferson not found. Installing..."
+# Install Jefferson
+if ! command -v jefferson &> /dev/null; then
+    print_msg info "Jefferson not found. Installing..."
 
-    rm -rf jeferson
-    mkdir jeferson
+    sudo apt install liblzo2-dev
+
+    rm -rf jefferson
     git clone https://github.com/sviehb/jefferson.git
     if [ $? -ne 0 ]; then
-        print_msg fail "Failed to clone Jeferson repository."
+        print_msg fail "Failed to clone Jefferson repository."
         exit 1
     fi
-    cd jeferson || exit
+    cd jefferson || exit
     pip install -r requirements.txt &> /dev/null
     if [ $? -ne 0 ]; then
-        print_msg fail "Failed to install Jeferson dependencies."
+        print_msg fail "Failed to install Jefferson dependencies."
         exit 1
     fi
     pip install . &> /dev/null
     if [ $? -ne 0 ]; then
-        print_msg fail "Failed to install Jeferson."
+        print_msg fail "Failed to install Jefferson."
         exit 1
     fi
-    print_msg success "Jeferson installed successfully."
+    print_msg success "Jefferson installed successfully."
     cd .. || exit
-    rm -rf jeferson
+    rm -rf jefferson
 else
-    print_msg info "Jeferson is already installed."
+    print_msg info "Jefferson is already installed."
 fi
 
 # Activate the virtual environment and install requirements
