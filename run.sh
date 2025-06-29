@@ -28,6 +28,14 @@ else
     exit 1
 fi
 
+if [ "$VIRTUAL_ENV" != "" ]; then
+    PYTHON_PATH=$VIRTUAL_ENV/bin/python
+elif [ -d "$REPO_ROOT/.env" ]; then
+    PYTHON_PATH="$REPO_ROOT/.env/bin/python"
+else
+    PYTHON_PATH=$(which python3)
+fi
+
 function get_option()
 {
     OPTION=${1}
@@ -51,7 +59,7 @@ function get_brand()
   INFILE=${1}
   BRAND=${2}
   if [ ${BRAND} = "auto" ]; then
-    echo `./scripts/util.py get_brand ${INFILE} ${PSQL_IP}`
+    echo `$PYTHON_PATH ./scripts/util.py get_brand ${INFILE} ${PSQL_IP}`
   else
     echo ${2}
   fi
@@ -88,7 +96,7 @@ function run_emulation()
     fi
 
     if [ -n "${FIRMAE_DOCKER-}" ]; then
-      if ( ! ./scripts/util.py check_connection _ $PSQL_IP ); then
+      if ( ! $PYTHON_PATH ./scripts/util.py check_connection _ $PSQL_IP ); then
         echo -e "[\033[31m-\033[0m] docker container failed to connect to the hosts' postgresql!"
         return
       fi
@@ -105,10 +113,10 @@ function run_emulation()
     # If the brand is not specified in the argument, it will be inferred 
     # automatically from the path of the image file.
     timeout --preserve-status --signal SIGINT 300 \
-        /home/georgerg/FirmaInc/sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
+        $PYTHON_PATH /home/georgerg/FirmaInc/sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
         -nk $INFILE images 2>&1 >/dev/null
 
-    IID=`./scripts/util.py get_iid $INFILE $PSQL_IP`
+    IID=`$PYTHON_PATH ./scripts/util.py get_iid $INFILE $PSQL_IP`
     if [ ! "${IID}" ]; then
         echo -e "[\033[31m-\033[0m] extractor.py failed!"
         return
@@ -120,7 +128,7 @@ function run_emulation()
     # If the brand is not specified in the argument, it will be inferred 
     # automatically from the path of the image file.
     timeout --preserve-status --signal SIGINT 300 \
-        ./sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
+        $PYTHON_PATH ./sources/extractor/extractor.py $brand_arg -sql $PSQL_IP -np \
         -nf $INFILE images 2>&1 >/dev/null
 
     WORK_DIR=`get_scratch ${IID}`
@@ -155,11 +163,11 @@ function run_emulation()
     # check architecture
     # ================================
     t_start="$(date -u +%s.%N)"
-    ARCH=`./scripts/getArch.py ./images/$IID.tar.gz $PSQL_IP`
+    ARCH=`$PYTHON_PATH ./scripts/getArch.py ./images/$IID.tar.gz $PSQL_IP`
     echo "${ARCH}" > "${WORK_DIR}/architecture"
 
     if [ -e ./images/${IID}.kernel ]; then
-      ./scripts/inferKernel.py ${IID}
+      $PYTHON_PATH ./scripts/inferKernel.py ${IID}
     fi
 
     if [ ! "${ARCH}" ]; then
@@ -183,7 +191,7 @@ function run_emulation()
         # make qemu image
         # ================================
         t_start="$(date -u +%s.%N)"
-        ./scripts/tar2db.py -i $IID -f ./images/$IID.tar.gz -h $PSQL_IP \
+        $PYTHON_PATH./scripts/tar2db.py -i $IID -f ./images/$IID.tar.gz -h $PSQL_IP \
             2>&1 > ${WORK_DIR}/tar2db.log
         t_end="$(date -u +%s.%N)"
         time_tar="$(bc <<<"$t_end-$t_start")"
@@ -204,7 +212,7 @@ function run_emulation()
         # TIMEOUT is set in "firmae.config". This TIMEOUT is used for initial
         # log collection.
         TIMEOUT=$TIMEOUT FIRMAE_NET=${FIRMAE_NET} \
-          ./scripts/makeNetwork.py -i $IID -q -o -a ${ARCH} \
+          $PYTHON_PATH ./scripts/makeNetwork.py -i $IID -q -o -a ${ARCH} \
           &> ${WORK_DIR}/makeNetwork.log
         ln -s ./run.sh ${WORK_DIR}/run_debug.sh | true
         ln -s ./run.sh ${WORK_DIR}/run_analyze.sh | true
