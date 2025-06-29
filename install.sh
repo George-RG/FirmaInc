@@ -222,12 +222,12 @@ if ! command -v jefferson &> /dev/null; then
         exit 1
     fi
     cd jefferson || exit
-    pip install -r requirements.txt &> /dev/null
+    $VIRTUAL_ENV/bin/pip install -r requirements.txt &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Jefferson dependencies."
         exit 1
     fi
-    pip install . &> /dev/null
+    $VIRTUAL_ENV/bin/pip install . &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Jefferson."
         exit 1
@@ -242,7 +242,7 @@ fi
 # Activate the virtual environment and install requirements
 if [ -f "$REPO_ROOT/requirements.txt" ]; then
     print_msg info "Installing Python dependencies from requirements.txt..."
-    pip install -r "$REPO_ROOT/requirements.txt" &> /dev/null
+    $VIRTUAL_ENV/bin/pip install -r "$REPO_ROOT/requirements.txt" &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Python dependencies."
         exit 1
@@ -254,7 +254,7 @@ fi
 
 if [ -d "$REPO_ROOT/analyses/routersploit" ]; then
     if [ "$(ls -A "$REPO_ROOT/analyses/routersploit")" ]; then
-        pip install -r "$REPO_ROOT/analyses/routersploit/requirements.txt" &> /dev/null
+        $VIRTUAL_ENV/bin/pip install -r "$REPO_ROOT/analyses/routersploit/requirements.txt" &> /dev/null
         cd "$REPO_ROOT/analyses/routersploit" && patch -p1 < ../routersploit_patch && cd "$REPO_ROOT" &> /dev/null
         print_msg info "Routersploit configured successfully."
     else
