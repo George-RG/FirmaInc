@@ -196,11 +196,6 @@ if ! command -v sasquatch &> /dev/null; then
         exit 1
     fi
     
-    ./build.sh &> /dev/null
-    if [ $? -ne 0 ]; then
-        print_msg fail "Failed to build Sasquatch."
-        exit 1
-    fi
     print_msg success "Sasquatch installed successfully."
     cd ../../.. || exit
     rm -rf sasquatch
