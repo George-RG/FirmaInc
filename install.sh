@@ -73,7 +73,7 @@ else
         -e POSTGRES_DB=firmware \
         -e PGDATA=/var/lib/postgresql/data/pgdata \
         -v $REPO_ROOT/database:/var/lib/postgresql/data \
-        -p 4321:4321 \
+        -p 5432:5432 \
         postgres &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to start the PostgreSQL container."
