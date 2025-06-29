@@ -137,7 +137,7 @@ if ! command -v binwalk &> /dev/null; then
     rm binwalk.tar.gz
     cd "./binwalk-2.3.5" || exit
     ./deps.sh --yes &> /dev/null
-    pip install . &> /dev/null
+    $VIRTUAL_ENV/bin/pip install . &> /dev/null
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Binwalk."
         exit 1
