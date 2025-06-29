@@ -182,7 +182,7 @@ if ! command -v sasquatch &> /dev/null; then
 
     cd squashfs4.3 || exit
     # Apply the patch
-    patch -p0 < patch0.txt
+    patch -p0 < ../patch0.txt
     cd squashfs-tools || exit
     make &> /dev/null
     if [ $? -ne 0 ]; then
