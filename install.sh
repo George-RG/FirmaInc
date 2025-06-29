@@ -133,11 +133,11 @@ if ! command -v binwalk &> /dev/null; then
     fi
     tar -xzf binwalk.tar.gz
     rm binwalk.tar.gz
-    cd "$REPO_ROOT/binwalk-2.3.5" || exit
+    cd "./binwalk-2.3.5" || exit
     ./deps.sh --yes &> /dev/null
     pip install . &> /dev/null
     cd - &> /dev/null || exit
-    rm -rf "$REPO_ROOT/binwalk-2.3.5"
+    rm -rf "./binwalk-2.3.5"
 
     if [ $? -ne 0 ]; then
         print_msg fail "Failed to install Binwalk."
