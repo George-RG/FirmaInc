@@ -191,7 +191,7 @@ function run_emulation()
         # make qemu image
         # ================================
         t_start="$(date -u +%s.%N)"
-        $PYTHON_PATH./scripts/tar2db.py -i $IID -f ./images/$IID.tar.gz -h $PSQL_IP \
+        $PYTHON_PATH ./scripts/tar2db.py -i $IID -f ./images/$IID.tar.gz -h $PSQL_IP \
             2>&1 > ${WORK_DIR}/tar2db.log
         t_end="$(date -u +%s.%N)"
         time_tar="$(bc <<<"$t_end-$t_start")"
