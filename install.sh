@@ -122,26 +122,118 @@ else
 fi
 
 # Install binwalk
-print_msg info "Installing Binwalk..."
-wget -q https://github.com/George-RG/binwalk/archive/refs/tags/v2.3.5.tar.gz -O binwalk.tar.gz
-if [ $? -ne 0 ]; then
-    print_msg fail "Failed to download Binwalk."
-    exit 1
-fi
-tar -xzf binwalk.tar.gz
-rm binwalk.tar.gz
-cd "$REPO_ROOT/binwalk-2.3.5" || exit
-./deps.sh --yes &> /dev/null
-pip install . &> /dev/null
-cd - &> /dev/null
-rm -rf "$REPO_ROOT/binwalk-2.3.5"
+if ! command -v binwalk &> /dev/null; then
+    print_msg info "Binwalk not found. Installing..."
 
-if [ $? -ne 0 ]; then
-    print_msg fail "Failed to install Binwalk."
-    exit 1
+    print_msg info "Installing Binwalk..."
+    wget -q https://github.com/George-RG/binwalk/archive/refs/tags/v2.3.5.tar.gz -O binwalk.tar.gz
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to download Binwalk."
+        exit 1
+    fi
+    tar -xzf binwalk.tar.gz
+    rm binwalk.tar.gz
+    cd "$REPO_ROOT/binwalk-2.3.5" || exit
+    ./deps.sh --yes &> /dev/null
+    pip install . &> /dev/null
+    cd - &> /dev/null || exit
+    rm -rf "$REPO_ROOT/binwalk-2.3.5"
+
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to install Binwalk."
+        exit 1
+    fi
+
+    print_msg success "Binwalk installed successfully"
+
+else
+    print_msg info "Binwalk is already installed."
 fi
 
-print_msg success "Binwalk installed successfully"
+# Install sasquatch
+if ! command -v sasquatch &> /dev/null; then
+    print_msg info "Sasquatch not found. Installing..."
+    
+    sudo apt-get install build-essential liblzma-dev liblzo2-dev zlib1g-dev
+
+    rm -rf sasquatch
+    mkdir sasquatch
+    cd sasquatch || exit
+
+    wget https://downloads.sourceforge.net/project/squashfs/squashfs/squashfs4.3/squashfs4.3.tar.gz
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to download SquashFS."
+        exit 1
+    fi
+
+    # Remove any previous squashfs4.3 directory to ensure a clean patch/build
+    rm -rf squashfs4.3
+
+    # Extract squashfs4.3.tar.gz
+    tar -zxvf squashfs4.3.tar.gz
+
+    wget https://raw.githubusercontent.com/devttys0/sasquatch/82da12efe97a37ddcd33dba53933bc96db4d7c69/patches/patch0.txt
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to download Sasquatch patch."
+        exit 1
+    fi
+
+    cd squashfs4.3 || exit
+    # Apply the patch
+    patch -p0 < patch0.txt
+    cd squashfs-tools || exit
+    make &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to build SquashFS tools."
+        exit 1
+    fi
+
+    sudo make install &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to install SquashFS tools."
+        exit 1
+    fi
+    
+    ./build.sh &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to build Sasquatch."
+        exit 1
+    fi
+    print_msg success "Sasquatch installed successfully."
+    cd ../../.. || exit
+    rm -rf sasquatch
+else
+    print_msg info "Sasquatch is already installed."
+fi
+
+# Install Jeferson
+if ! command -v jeferson &> /dev/null; then
+    print_msg info "Jeferson not found. Installing..."
+
+    rm -rf jeferson
+    mkdir jeferson
+    git clone https://github.com/sviehb/jefferson.git
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to clone Jeferson repository."
+        exit 1
+    fi
+    cd jeferson || exit
+    pip install -r requirements.txt &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to install Jeferson dependencies."
+        exit 1
+    fi
+    pip install . &> /dev/null
+    if [ $? -ne 0 ]; then
+        print_msg fail "Failed to install Jeferson."
+        exit 1
+    fi
+    print_msg success "Jeferson installed successfully."
+    cd .. || exit
+    rm -rf jeferson
+else
+    print_msg info "Jeferson is already installed."
+fi
 
 # Activate the virtual environment and install requirements
 if [ -f "$REPO_ROOT/requirements.txt" ]; then
