@@ -15,3 +15,5 @@ sudo apt install -y mtd-utils gzip bzip2 tar arj lhasa p7zip p7zip-full cabextra
 sudo apt install -y openjdk-8-jdk unrar
 
 sudo apt install -y qemu-system-arm qemu-system-mips qemu-system-x86 qemu-utils
+
+sudo apt install -y python3.12-dev
