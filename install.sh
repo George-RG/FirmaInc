@@ -107,9 +107,11 @@ print_msg info "Creating Python enviroment"
 # Check if the Python virtual environment already exists
 if [ "$VIRTUAL_ENV" != "" ]; then
     print_msg info "Python virtual environment already exists. Skipping creation."
+    print_msg info "Using existing virtual environment: $VIRTUAL_ENV"
 elif [ -d "$REPO_ROOT/.env" ]; then
     print_msg info "Python virtual environment already exists. Skipping creation."
     source "$REPO_ROOT/.env/bin/activate"
+    print_msg info "Using existing virtual environment: $VIRTUAL_ENV"
 else
     print_msg info "Creating Python virtual environment..."
     python3 -m venv "$REPO_ROOT/.env"
